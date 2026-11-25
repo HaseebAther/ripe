@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ripe</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='46' fill='%239EC1CF'/%3E%3Cellipse cx='100' cy='114' rx='66' ry='60' fill='%2379A93A'/%3E%3Cpath d='M100 116V78A38 38 0 0 1 138 116Z' fill='%23FBFAF6'/%3E%3Ccircle cx='100' cy='116' r='8' fill='%23C9A24B'/%3E%3Cg fill='%233E7B35' transform='translate(100 60)'%3E%3Cellipse cx='16' rx='18' ry='8' transform='rotate(12)'/%3E%3Cellipse cx='16' rx='18' ry='8' transform='rotate(168)'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=Figtree:wght@300..900&display=swap">
+<style>
+:root{
+  color-scheme:light dark;
+  --tile:light-dark(#9EC1CF,#17303A);
+  --grout:light-dark(rgba(255,255,255,.34),rgba(255,255,255,.045));
+  --glow:light-dark(rgba(255,255,255,.55),rgba(120,190,210,.12));
+  --ink:light-dark(#15242C,#E8F1F3);
+  --ink-soft:light-dark(rgba(21,36,44,.66),rgba(232,241,243,.66));
+  --enamel:light-dark(#FBFAF6,#21414D);
+  --enamel-edge:light-dark(rgba(21,36,44,.10),rgba(255,255,255,.08));
+  --fruit:#79A93A;
+  --on-fruit:#15242C;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{
+  margin:0;color:var(--ink);overflow:hidden;
+  font:16px/1.45 "Figtree",system-ui,sans-serif;
+  background:
+    radial-gradient(120% 70% at 50% 34%,var(--glow),transparent 62%),
+    repeating-linear-gradient(0deg,var(--grout) 0 2px,transparent 2px 64px),
+    repeating-linear-gradient(90deg,var(--grout) 0 2px,transparent 2px 64px),
+    var(--tile);
+  background-position:center,center 31px,31px center,center;
+  display:grid;grid-template-rows:auto 1fr auto;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;-webkit-app-region:no-drag}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* ── title bar ── */
+.bar{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 10px 0 18px;-webkit-app-region:drag;user-select:none}
+.mark{display:flex;align-items:center;gap:8px;font:italic 600 21px/1 "Fraunces",Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 48;letter-spacing:-.01em}
+.win{display:flex;gap:2px}
+.wbtn{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--ink-soft);transition:background-color 150ms ease,color 150ms ease,transform 140ms var(--ease-out)}
+.wbtn svg{width:15px;height:15px}
+.wbtn:active{transform:scale(.94)}
+.wbtn[aria-pressed=true]{color:var(--ink);background:var(--enamel)}
+@media (hover:hover) and (pointer:fine){.wbtn:hover{background:var(--enamel);color:var(--ink)}#close:hover{background:#D9442F;color:#fff}}
+body.web .win{display:none}
+
+/* ── screen container ── */
+.screen-container{position:relative;overflow:hidden;min-height:0}
+.screen{position:absolute;inset:0;overflow-y:auto;display:none;flex-direction:column}
+.screen.active{display:flex}
+.screen[data-screen=timer]{overflow:hidden}
+
+/* ── timer screen ── */
+.app{
+  flex:1;min-height:0;
+  display:grid;grid-template-rows:auto minmax(220px,1fr) auto auto;
+  justify-items:center;width:min(100%,460px);margin:0 auto;padding:4px 20px 22px;gap:6px
+}
+
+.tabs{position:relative;width:100%;max-width:340px;background:var(--enamel);border-radius:999px;box-shadow:0 1px 0 var(--enamel-edge),0 10px 24px -14px rgba(10,30,40,.45)}
+.tablist{display:grid;grid-template-columns:1fr 1.35fr 1.3fr;padding:4px}
+.tablist button,.tablist span{height:38px;border-radius:999px;display:grid;place-items:center;font-size:14.5px;font-weight:600;white-space:nowrap;color:var(--ink-soft)}
+.tablist--on{position:absolute;inset:0;pointer-events:none;background:var(--fruit);border-radius:999px;clip-path:inset(4px 66% 4px 4px round 999px);transition:background-color 300ms ease}
+.tabs.ready .tablist--on{transition:clip-path 280ms var(--ease-out),background-color 300ms ease}
+.tablist--on span{color:var(--on-fruit)}
+
+.stage{position:relative;width:100%;height:100%;min-height:220px;cursor:grab;touch-action:none;border-radius:28px}
+.stage.locked{cursor:default}
+.stage.dragging{cursor:grabbing}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hint{position:absolute;left:0;right:0;bottom:4px;margin:0;text-align:center;font-size:13.5px;color:var(--ink-soft);transition:opacity 300ms ease,transform 300ms var(--ease-out);pointer-events:none}
+.hint.gone{opacity:0;transform:translateY(4px)}
+
+.readout{display:grid;justify-items:center;gap:2px;margin-top:-6px}
+.time{font:600 clamp(64px,19vw,88px)/.95 "Fraunces",Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 0,"opsz" 144;font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.035em}
+.status{display:flex;align-items:center;gap:10px;margin:6px 0 0;font-size:14.5px;color:var(--ink-soft)}
+.rounds{display:flex;gap:5px;margin:0;padding:0;list-style:none}
+.rounds li{position:relative;width:11px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-soft);transition:background-color 300ms ease,box-shadow 300ms ease}
+.rounds li::before{content:"";position:absolute;left:4px;top:-3px;width:3px;height:3px;border-radius:2px;background:var(--ink-soft)}
+.rounds li.done{background:#E0392A;box-shadow:inset 0 0 0 1.5px #E0392A}
+.rounds li.done::before{background:#3E7B35}
+
+.controls{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:12px;width:100%;max-width:340px;margin-top:14px}
+.go{height:58px;border-radius:999px;background:var(--fruit);color:var(--on-fruit);font-size:19px;font-weight:700;letter-spacing:.005em;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.28),inset 0 -3px 0 rgba(0,0,0,.14),0 14px 26px -14px rgba(10,30,40,.6);
+  transition:transform 150ms var(--ease-out),background-color 300ms ease,color 300ms ease}
+.go:active{transform:scale(.97)}
+.go span{display:inline-block;transition:filter 160ms ease,opacity 160ms ease}
+.go.swap span{filter:blur(3px);opacity:.4}
+.ibtn{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--enamel);color:var(--ink);box-shadow:0 1px 0 var(--enamel-edge),0 10px 20px -14px rgba(10,30,40,.55);transition:transform 150ms var(--ease-out),opacity 150ms ease}
+.ibtn svg{width:20px;height:20px}
+.ibtn:active{transform:scale(.94)}
+.ibtn[aria-pressed=false]{opacity:.62}
+
+.toast{position:fixed;left:50%;bottom:72px;width:max-content;max-width:calc(100% - 40px);translate:-50% 0;padding:12px 18px;border-radius:16px;background:var(--enamel);color:var(--ink);font-size:15px;font-weight:600;box-shadow:0 18px 40px -18px rgba(10,30,40,.6);
+  opacity:1;transform:translateY(0);transition:opacity 400ms ease,transform 400ms ease}
+@starting-style{.toast{opacity:0;transform:translateY(14px)}}
+.toast.out{opacity:0;transform:translateY(8px);transition-duration:220ms}
+
+@media (max-height:600px){.time{font-size:60px}.controls{margin-top:8px}.go{height:52px}}
+@media (prefers-reduced-motion:reduce){
+  .tabs.ready .tablist--on{transition:background-color 200ms ease}
+  .toast{transition:opacity 200ms ease}
+  @starting-style{.toast{transform:none}}
+}
+
+/* widget mode no longer needed — widget uses a separate window */
+
+/* ── bottom nav ── */
+.nav{
+  display:flex;justify-content:space-around;align-items:center;
+  height:60px;padding:0 4px;
+  background:var(--enamel);border-top:1px solid var(--enamel-edge);
+  box-shadow:0 -4px 20px -8px rgba(10,30,40,.10);
+  flex-shrink:0;
+}
+.nbtn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:5px 14px 6px;border-radius:14px;flex:1;
+  color:var(--ink-soft);font-size:11px;font-weight:600;letter-spacing:.01em;
+  transition:color 150ms ease,background 150ms ease;
+}
+.nbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nbtn.active{color:var(--ink)}
+.nbtn::after{content:"";display:block;width:4px;height:4px;border-radius:50%;background:transparent;margin-top:1px;transition:background 150ms ease}
+.nbtn.active::after{background:var(--fruit)}
+
+/* ── shared screen styles ── */
+.screen-title{
+  font:italic 600 22px/1.1 "Fraunces",Georgia,serif;
+  font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 48;
+  margin:0 0 4px;letter-spacing:-.01em;
+}
+.screen-subtitle{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase;margin:4px 0 0}
+
+/* ── tasks screen ── */
+.screen[data-screen=tasks]{padding:18px 16px 20px;gap:14px}
+.task-add{
+  display:flex;gap:8px;align-items:center;
+  background:var(--enamel);border-radius:16px;padding:8px 8px 8px 16px;
+  box-shadow:0 1px 0 var(--enamel-edge),0 8px 24px -12px rgba(10,30,40,.3);
+}
+.task-input{
+  flex:1;border:none;background:none;font:500 15px/1.4 "Figtree",system-ui,sans-serif;
+  color:var(--ink);outline:none;padding:4px 0;
+}
+.task-input::placeholder{color:var(--ink-soft)}
+.task-add-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--fruit);color:var(--on-fruit);
+  font-size:22px;line-height:1;display:grid;place-items:center;flex-shrink:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 0 rgba(0,0,0,.12);
+  transition:transform 130ms var(--ease-out);
+}
+.task-add-btn:active{transform:scale(.92)}
+.task-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.task-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--enamel);border-radius:14px;padding:12px 10px 12px 14px;
+  box-shadow:0 1px 0 var(--enamel-edge),0 4px 16px -8px rgba(10,30,40,.2);
+  transition:opacity 200ms ease;
+}
+.task-item.done{opacity:.55}
+.task-check{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1.5px var(--ink-soft);
+  transition:background 200ms ease,box-shadow 200ms ease;
+}
+.task-check svg{width:16px;height:16px}
+.task-item.done .task-check{background:var(--fruit);box-shadow:inset 0 0 0 1.5px var(--fruit)}
+.task-item.done .task-check svg{color:var(--on-fruit)}
+.task-text{flex:1;font-size:15px;font-weight:500;line-height:1.35;transition:text-decoration 200ms ease}
+.task-item.done .task-text{text-decoration:line-through}
+.task-del{
+  width:28px;height:28px;border-radius:8px;
+  display:grid;place-items:center;color:var(--ink-soft);opacity:.6;
+  transition:opacity 150ms ease,background 150ms ease;
+}
+.task-del svg{width:14px;height:14px;stroke-width:2}
+.task-del:hover{opacity:1;background:rgba(217,68,47,.12);color:#D9442F}
+.task-empty{text-align:center;color:var(--ink-soft);padding:40px 20px;font-size:15px;line-height:1.6}
+.task-empty p{margin:0}
+.task-actions{display:flex;justify-content:flex-end}
+.clear-btn{font-size:13px;font-weight:600;color:var(--ink-soft);padding:6px 12px;border-radius:8px;transition:color 150ms ease,background 150ms ease}
+.clear-btn:hover{color:var(--ink);background:var(--enamel)}
+
+/* ── stats screen ── */
+.screen[data-screen=stats]{padding:18px 16px 20px;gap:14px}
+.stat-row{display:flex;gap:10px}
+.stat-card{
+  flex:1;background:var(--enamel);border-radius:18px;padding:16px 12px;
+  text-align:center;box-shadow:0 1px 0 var(--enamel-edge),0 8px 24px -12px rgba(10,30,40,.25);
+}
+.stat-num{
+  display:block;
+  font:700 28px/1 "Fraunces",Georgia,serif;
+  font-variation-settings:"SOFT" 100,"WONK" 0,"opsz" 48;
+  margin-bottom:5px;
+}
+.stat-label{font-size:12px;font-weight:600;color:var(--ink-soft);letter-spacing:.01em}
+.log-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.log-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--enamel);border-radius:14px;padding:11px 14px;
+  box-shadow:0 1px 0 var(--enamel-edge);
+}
+.log-mode{font-size:14px;font-weight:600}
+.log-meta{font-size:13px;color:var(--ink-soft)}
+.log-empty{text-align:center;color:var(--ink-soft);padding:36px 20px;font-size:15px;line-height:1.6}
+.log-empty p{margin:0}
+
+/* ── settings screen ── */
+.screen[data-screen=settings]{padding:18px 16px 24px;gap:14px}
+.setting-group{
+  background:var(--enamel);border-radius:18px;overflow:hidden;
+  box-shadow:0 1px 0 var(--enamel-edge),0 8px 24px -12px rgba(10,30,40,.25);
+}
+.setting-group-title{
+  font-size:11px;font-weight:700;color:var(--ink-soft);
+  letter-spacing:.06em;text-transform:uppercase;padding:14px 16px 8px;
+}
+.setting-row{
+  display:flex;align-items:center;padding:10px 16px;gap:12px;
+  border-top:1px solid var(--enamel-edge);
+}
+.setting-row:first-of-type{border-top:none}
+.setting-label{flex:1;font-size:15px;font-weight:500}
+.stepper{display:flex;align-items:center;gap:10px}
+.step-btn{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:var(--tile);color:var(--ink);font-size:18px;
+  display:grid;place-items:center;
+  box-shadow:0 1px 0 var(--enamel-edge),0 2px 8px -4px rgba(10,30,40,.3);
+  transition:transform 130ms var(--ease-out);
+}
+.step-btn:active{transform:scale(.90)}
+.step-val{
+  font:700 17px/1 "Fraunces",Georgia,serif;
+  font-variation-settings:"SOFT" 100,"WONK" 0,"opsz" 48;
+  min-width:26px;text-align:center;
+}
+.setting-unit{font-size:13px;color:var(--ink-soft);font-weight:600;min-width:24px}
+.theme-seg{display:flex;background:var(--tile);border-radius:10px;padding:3px;gap:2px}
+.theme-btn{
+  padding:5px 10px;border-radius:7px;font-size:13px;font-weight:600;
+  color:var(--ink-soft);transition:background 150ms ease,color 150ms ease;
+}
+.theme-btn.active{background:var(--enamel);color:var(--ink);box-shadow:0 1px 0 var(--enamel-edge)}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<header class="bar">
+  <span class="mark">
+    <svg viewBox="0 0 200 200" width="24" height="24" aria-hidden="true">
+      <rect width="200" height="200" rx="46" fill="#9EC1CF"/>
+      <ellipse cx="100" cy="114" rx="66" ry="60" fill="#79A93A"/>
+      <path d="M100 116V78A38 38 0 0 1 138 116Z" fill="#FBFAF6"/>
+      <circle cx="100" cy="116" r="8" fill="#C9A24B"/>
+      <g fill="#3E7B35" transform="translate(100 60)">
+        <ellipse cx="16" rx="18" ry="8" transform="rotate(12)"/>
+        <ellipse cx="16" rx="18" ry="8" transform="rotate(168)"/>
+      </g>
+    </svg>
+    Ripe
+  </span>
+  <div class="win">
+    <button id="pin" class="wbtn" aria-label="Mini mode" aria-pressed="false" title="Mini mode">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 1.8 14.2 6l-2.1.7-2.4 2.4.3 3.2-1.2 1.2-6.3-6.3 1.2-1.2 3.2.3 2.4-2.4z"/>
+        <path d="m5.3 10.7-3.5 3.5"/>
+      </svg>
+    </button>
+    <button id="min" class="wbtn" aria-label="Minimize" title="Minimize">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M3.5 8.5h9"/>
+      </svg>
+    </button>
+    <button id="close" class="wbtn" aria-label="Close" title="Close">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="m4 4 8 8M12 4l-8 8"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="screen-container">
+
+  <!-- ── Timer screen ── -->
+  <div class="screen active" data-screen="timer">
+    <main class="app">
+      <nav class="tabs" id="tabs" aria-label="Timer mode">
+        <div class="tablist" role="tablist">
+          <button role="tab" data-mode="focus" aria-selected="true">Focus</button>
+          <button role="tab" data-mode="short" aria-selected="false">Short break</button>
+          <button role="tab" data-mode="long" aria-selected="false">Long break</button>
+        </div>
+        <div class="tablist tablist--on" aria-hidden="true">
+          <span>Focus</span><span>Short break</span><span>Long break</span>
+        </div>
+      </nav>
+
+      <div class="stage" id="stage" role="slider" tabindex="0"
+        aria-label="Timer dial in minutes. Drag sideways or use arrow keys to set."
+        aria-valuemin="1" aria-valuemax="60" aria-valuenow="25">
+        <p class="hint" id="hint">Drag sideways to twist the dial</p>
+      </div>
+
+      <section class="readout">
+        <output id="time" class="time" aria-live="off">25:00</output>
+        <div class="status">
+          <span id="status">Ready when you are</span>
+          <ol class="rounds" id="rounds" aria-label="Focus rounds before a long break">
+            <li></li><li></li><li></li><li></li>
+          </ol>
+        </div>
+      </section>
+
+      <div class="controls">
+        <button id="sound" class="ibtn" aria-label="Sound" aria-pressed="true" title="Sound (M)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/>
+            <path class="wave" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>
+          </svg>
+        </button>
+        <button id="go" class="go"><span>Start</span></button>
+        <button id="reset" class="ibtn" aria-label="Reset" title="Reset (R)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/>
+            <path d="M4.5 4v4h4"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ── Tasks screen ── -->
+  <section class="screen" data-screen="tasks">
+    <h2 class="screen-title">Tasks</h2>
+    <div class="task-add">
+      <input class="task-input" id="task-input" type="text" placeholder="What are you working on?" autocomplete="off">
+      <button class="task-add-btn" id="task-add-btn" aria-label="Add task">+</button>
+    </div>
+    <ul class="task-list" id="task-list"></ul>
+    <div class="task-empty" id="task-empty">
+      <p>Nothing yet.</p>
+      <p>Add a task to stay focused.</p>
+    </div>
+    <div class="task-actions" id="task-actions" hidden>
+      <button class="clear-btn" id="clear-done">Clear completed</button>
+    </div>
+  </section>
+
+  <!-- ── Stats screen ── -->
+  <section class="screen" data-screen="stats">
+    <h2 class="screen-title">Today</h2>
+    <div class="stat-row">
+      <div class="stat-card">
+        <span class="stat-num" id="stat-sessions">0</span>
+        <span class="stat-label">sessions</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="stat-minutes">0m</span>
+        <span class="stat-label">focused</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="stat-streak">0</span>
+        <span class="stat-label">day streak</span>
+      </div>
+    </div>
+    <p class="screen-subtitle">Recent sessions</p>
+    <ul class="log-list" id="log-list"></ul>
+    <div class="log-empty" id="log-empty">
+      <p>No sessions yet.</p>
+      <p>Complete a focus round to log it here.</p>
+    </div>
+  </section>
+
+  <!-- ── Settings screen ── -->
+  <section class="screen" data-screen="settings">
+    <h2 class="screen-title">Settings</h2>
+
+    <div class="setting-group">
+      <p class="setting-group-title">Timer durations</p>
+      <div class="setting-row">
+        <span class="setting-label">Focus</span>
+        <div class="stepper" data-dur="focus">
+          <button class="step-btn" data-step="-5" aria-label="Decrease focus by 5">−</button>
+          <span class="step-val" id="dur-focus">25</span>
+          <button class="step-btn" data-step="5" aria-label="Increase focus by 5">+</button>
+        </div>
+        <span class="setting-unit">min</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Short break</span>
+        <div class="stepper" data-dur="short">
+          <button class="step-btn" data-step="-1" aria-label="Decrease short break">−</button>
+          <span class="step-val" id="dur-short">5</span>
+          <button class="step-btn" data-step="1" aria-label="Increase short break">+</button>
+        </div>
+        <span class="setting-unit">min</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Long break</span>
+        <div class="stepper" data-dur="long">
+          <button class="step-btn" data-step="-5" aria-label="Decrease long break by 5">−</button>
+          <span class="step-val" id="dur-long">15</span>
+          <button class="step-btn" data-step="5" aria-label="Increase long break by 5">+</button>
+        </div>
+        <span class="setting-unit">min</span>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <p class="setting-group-title">Appearance</p>
+      <div class="setting-row">
+        <span class="setting-label">Theme</span>
+        <div class="theme-seg">
+          <button class="theme-btn active" data-theme="">Auto</button>
+          <button class="theme-btn" data-theme="light">Light</button>
+          <button class="theme-btn" data-theme="dark">Dark</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <p class="setting-group-title">Sessions</p>
+      <div class="setting-row">
+        <span class="setting-label">Rounds per cycle</span>
+        <div class="stepper" data-dur="rounds">
+          <button class="step-btn" data-step="-1" aria-label="Fewer rounds">−</button>
+          <span class="step-val" id="dur-rounds">4</span>
+          <button class="step-btn" data-step="1" aria-label="More rounds">+</button>
+        </div>
+        <span class="setting-unit"></span>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /screen-container -->
+
+<!-- ── Bottom nav ── -->
+<nav class="nav" aria-label="App navigation">
+  <button class="nbtn active" data-nav="timer" aria-current="page" aria-label="Timer">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="13" r="8"/>
+      <path d="M12 5V3M9.5 3.5a5 5 0 0 1 5 0"/>
+    </svg>
+    <span>Timer</span>
+  </button>
+  <button class="nbtn" data-nav="tasks" aria-label="Tasks">
+    <svg viewBox="0 0 24 24">
+      <line x1="9" y1="6" x2="21" y2="6"/>
+      <line x1="9" y1="12" x2="21" y2="12"/>
+      <line x1="9" y1="18" x2="21" y2="18"/>
+      <polyline points="3 6 4 7 6 5"/>
+      <polyline points="3 12 4 13 6 11"/>
+      <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+    <span>Tasks</span>
+  </button>
+  <button class="nbtn" data-nav="stats" aria-label="Stats">
+    <svg viewBox="0 0 24 24">
+      <rect x="3" y="12" width="4" height="9" rx="1"/>
+      <rect x="10" y="7" width="4" height="14" rx="1"/>
+      <rect x="17" y="4" width="4" height="17" rx="1"/>
+    </svg>
+    <span>Stats</span>
+  </button>
+  <button class="nbtn" data-nav="settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24">
+      <line x1="4" y1="6" x2="20" y2="6"/>
+      <circle cx="8" cy="6" r="2.5" fill="currentColor" stroke="none"/>
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <circle cx="16" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+      <line x1="4" y1="18" x2="20" y2="18"/>
+      <circle cx="10" cy="18" r="2.5" fill="currentColor" stroke="none"/>
+    </svg>
+    <span>Settings</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="module">
+import { createTomato } from './ripe-tomato.js';
+
+/* ── constants ── */
+const MODES = {
+  focus: { min: 25, fruit: '#E0392A', onFruit: '#FFF8F2', status: 'Focusing',     done: 'Focus round done. Time for a break.' },
+  short: { min: 5,  fruit: '#8FB23A', onFruit: '#15242C', status: 'Short break',  done: 'Break over. Back to it.' },
+  long:  { min: 15, fruit: '#F59A14', onFruit: '#15242C', status: 'Long break',   done: 'Long break over. Fresh start.' },
+};
+let ROUNDS = 4;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (id) => document.getElementById(id);
+
+/* ── storage ── */
+const store = (() => {
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem('ripe:v1') || '{}'); } catch {}
+  return {
+    get: (k, d) => (k in data ? data[k] : d),
+    set: (k, v) => { data[k] = v; try { localStorage.setItem('ripe:v1', JSON.stringify(data)); } catch {} },
+  };
+})();
+
+ROUNDS = store.get('rounds', 4);
+
+/* ── state ── */
+const state = {
+  mode: 'focus',
+  durations: Object.assign({ focus: 25, short: 5, long: 15 }, store.get('durations', {})),
+  remaining: 0,
+  running: false,
+  endAt: 0,
+  round: store.get('round', 0),
+  sound: store.get('sound', true),
+};
+state.remaining = state.durations.focus * 60;
+
+/* ── ripeness ── */
+let ripeness = 0;
+
+function ripeColor(p) {
+  const C = [[0x79,0xA9,0x3A],[0xE9,0xA1,0x2A],[0xE0,0x39,0x2A]];
+  let r,g,b;
+  if (p < 0.55) {
+    const t = p / 0.55;
+    r = Math.round(C[0][0] + (C[1][0]-C[0][0])*t);
+    g = Math.round(C[0][1] + (C[1][1]-C[0][1])*t);
+    b = Math.round(C[0][2] + (C[1][2]-C[0][2])*t);
+  } else {
+    const t = (p - 0.55) / 0.45;
+    r = Math.round(C[1][0] + (C[2][0]-C[1][0])*t);
+    g = Math.round(C[1][1] + (C[2][1]-C[1][1])*t);
+    b = Math.round(C[1][2] + (C[2][2]-C[1][2])*t);
+  }
+  return `rgb(${r},${g},${b})`;
+}
+
+function setRipeness(p) {
+  ripeness = Math.min(1, Math.max(0, p));
+  tomato.setRipeness(ripeness);
+  syncPip();
+}
+
+/* ── sound ── */
+let ac;
+const audio = () => {
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } }
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+};
+function click(strength = 1) {
+  if (!state.sound) return;
+  const a = audio(); if (!a) return;
+  const t = a.currentTime, len = 0.018;
+  const buf = a.createBuffer(1, Math.floor(a.sampleRate * len), a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 3;
+  const src = a.createBufferSource(); src.buffer = buf;
+  const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600 + Math.random() * 600; bp.Q.value = 2.5;
+  const g = a.createGain(); g.gain.value = 0.35 * strength;
+  src.connect(bp).connect(g).connect(a.destination); src.start(t);
+}
+function bell() {
+  if (!state.sound) return;
+  const a = audio(); if (!a) return;
+  const t0 = a.currentTime + 0.02;
+  for (let i = 0; i < 16; i++) {
+    const t = t0 + i / 19 + (i > 7 ? 0.22 : 0);
+    for (const [f, v] of [[2350, 0.16], [3540, 0.07], [5900, 0.03]]) {
+      const o = a.createOscillator(); o.frequency.value = f * (1 + (Math.random() - 0.5) * 0.004);
+      const g = a.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (i === 15 ? 1.4 : 0.32));
+      o.connect(g).connect(a.destination); o.start(t); o.stop(t + 1.5);
+    }
+  }
+}
+
+/* ── 3D tomato ── */
+const stage = $('stage');
+let wasDrag = false;
+
+const tomato = createTomato(stage, {
+  minutes: state.durations.focus,
+  ripeness: 0,
+  draggable: true,
+  onChange: (m) => { wasDrag = true; if (!state.running) setMinutes(m); },
+  onTick:   (m) => click(m % 5 === 0 ? 1 : 0.55),
+  reducedMotion: reduce,
+});
+
+stage.addEventListener('click', () => {
+  if (wasDrag) { wasDrag = false; return; }
+  toggle();
+});
+
+stage.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (state.running) return;
+  const cur = Math.round(state.remaining / 60);
+  const m = Math.min(60, Math.max(1, cur + (e.deltaY > 0 ? -1 : 1)));
+  if (m !== cur) { setMinutes(m); tomato.setMinutes(m, { instant: true }); click(m % 5 === 0 ? 1 : 0.55); }
+}, { passive: false });
+
+stage.addEventListener('keydown', (e) => {
+  if (state.running) return;
+  const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 5, PageDown: -5 }[e.key];
+  if (!d) return;
+  e.preventDefault();
+  const m = Math.min(60, Math.max(1, Math.round(state.remaining / 60) + d));
+  setMinutes(m); tomato.setMinutes(m, { instant: true });
+});
+
+/* ── UI helpers ── */
+const fmt = (sec) => {
+  const s = Math.max(0, Math.ceil(sec - 0.001));
+  return `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+};
+let lastText = '';
+function paint() {
+  const text = fmt(state.remaining);
+  if (text !== lastText) {
+    lastText = text;
+    $('time').textContent = text;
+    document.title = state.running ? `${text} ${state.mode === 'focus' ? 'Focus' : 'Break'}` : 'Ripe';
+    stage.setAttribute('aria-valuenow', String(Math.ceil(state.remaining / 60)));
+    if (pipDoc) {
+      const el = pipDoc.getElementById('pip-time');
+      if (el) el.textContent = text;
+    }
+  }
+}
+function setGo(label) {
+  const go = $('go'), span = go.firstElementChild;
+  if (span.textContent === label) return;
+  if (reduce) { span.textContent = label; return; }
+  go.classList.add('swap');
+  setTimeout(() => { span.textContent = label; go.classList.remove('swap'); }, 110);
+}
+function setStatus() {
+  const full = state.remaining >= state.durations[state.mode] * 60 - 0.5;
+  $('status').textContent = state.running ? MODES[state.mode].status
+    : full ? (state.mode === 'focus' ? `Round ${state.round + 1} of ${ROUNDS}` : 'Ready for a break')
+    : 'Paused';
+  [...$('rounds').children].forEach((li, i) => li.classList.toggle('done', i < state.round));
+  if (pipDoc) updatePipGo();
+}
+
+const tabs = $('tabs');
+const onList = tabs.querySelector('.tablist--on');
+const tabBtns = [...tabs.querySelectorAll('[role=tab]')];
+function placeTabs() {
+  const btn = tabBtns.find((b) => b.dataset.mode === state.mode);
+  const W = tabs.clientWidth;
+  onList.style.clipPath = `inset(4px ${W - btn.offsetLeft - btn.offsetWidth}px 4px ${btn.offsetLeft}px round 999px)`;
+  tabBtns.forEach((b) => b.setAttribute('aria-selected', String(b === btn)));
+}
+new ResizeObserver(placeTabs).observe(tabs);
+
+function bump(amount = 0.93) { if (!reduce) tomato.bump(amount); }
+
+/* ── rounds UI ── */
+function syncRoundDots() {
+  const ol = $('rounds');
+  while (ol.children.length < ROUNDS) ol.appendChild(document.createElement('li'));
+  while (ol.children.length > ROUNDS) ol.removeChild(ol.lastChild);
+}
+
+/* ── timer controls ── */
+function setMode(mode, { keepRound } = {}) {
+  state.mode = mode;
+  state.running = false;
+  state.remaining = state.durations[mode] * 60;
+  const m = MODES[mode];
+  document.documentElement.style.setProperty('--fruit', m.fruit);
+  document.documentElement.style.setProperty('--on-fruit', m.onFruit);
+  placeTabs();
+  if (!keepRound && mode === 'focus' && state.round >= ROUNDS) state.round = 0;
+  setRipeness(0);
+  tomato.setMinutes(state.durations[mode], { instant: true });
+  setGo('Start'); setStatus(); paint();
+}
+tabBtns.forEach((b) => b.addEventListener('click', () => {
+  if (b.dataset.mode !== state.mode) { setMode(b.dataset.mode); bump(0.94); }
+}));
+
+function start() {
+  if (state.remaining <= 0) state.remaining = state.durations[state.mode] * 60;
+  state.running = true;
+  stage.classList.add('locked');
+  state.endAt = performance.now() + state.remaining * 1000;
+  audio(); click(0.8); setGo('Pause'); setStatus();
+  if (window.Notification && Notification.permission === 'default') { try { Notification.requestPermission(); } catch {} }
+}
+function pause() { state.running = false; stage.classList.remove('locked'); setGo('Resume'); setStatus(); click(0.6); }
+function toggle() { state.running ? pause() : start(); bump(); }
+
+function reset() {
+  state.running = false;
+  stage.classList.remove('locked');
+  state.remaining = state.durations[state.mode] * 60;
+  setRipeness(0);
+  tomato.setMinutes(state.durations[state.mode], { instant: true });
+  setGo('Start'); setStatus(); paint();
+}
+
+function setMinutes(m) {
+  if (state.running) {
+    state.remaining = m * 60;
+    state.endAt = performance.now() + m * 60000;
+  } else {
+    state.remaining = m * 60;
+    state.durations[state.mode] = m;
+    store.set('durations', state.durations);
+    setGo('Start');
+  }
+  setStatus(); paint();
+}
+
+/* ── toast ── */
+let toastTimer;
+function toast(msg) {
+  const t = $('toast'); clearTimeout(toastTimer);
+  t.classList.remove('out'); t.hidden = true; t.textContent = msg;
+  requestAnimationFrame(() => { t.hidden = false; });
+  toastTimer = setTimeout(() => { t.classList.add('out'); setTimeout(() => { t.hidden = true; }, 230); }, 4200);
+}
+
+/* ── session logging ── */
+function logSession(mode, minutes) {
+  const sessions = store.get('sessions', []);
+  sessions.push({ mode, minutes, ts: Date.now() });
+  if (sessions.length > 300) sessions.splice(0, sessions.length - 300);
+  store.set('sessions', sessions);
+}
+
+/* ── finish ── */
+function finish() {
+  const was = state.mode;
+  state.running = false; stage.classList.remove('locked'); state.remaining = 0; paint();
+  bell();
+  tomato.jump();
+  setRipeness(1);
+  if (was === 'focus') logSession(was, state.durations[was]);
+  const msg = MODES[was].done;
+  toast(msg);
+  try { if (window.Notification && Notification.permission === 'granted') new Notification('Ripe', { body: msg, silent: true }); } catch {}
+  let next = 'focus';
+  if (was === 'focus') { state.round += 1; next = state.round >= ROUNDS ? 'long' : 'short'; }
+  if (was === 'long') state.round = 0;
+  store.set('round', state.round);
+  setTimeout(() => setMode(next, { keepRound: true }), reduce ? 0 : 900);
+}
+
+/* ── tick ── */
+setInterval(() => {
+  if (!state.running) return;
+  state.remaining = (state.endAt - performance.now()) / 1000;
+  if (state.remaining <= 0) {
+    finish();
+  } else {
+    const total = state.durations[state.mode] * 60;
+    setRipeness((total - state.remaining) / total);
+    tomato.setMinutes(state.remaining / 60);
+    paint();
+  }
+}, 200);
+
+/* ── pip widget ── */
+let pipWindow = null;
+let pipDoc = null;
+
+function syncPip() {
+  if (!pipDoc) return;
+  const dot = pipDoc.getElementById('pip-dot');
+  if (dot) dot.style.background = ripeColor(ripeness);
+  const goBtn = pipDoc.getElementById('pip-go');
+  if (goBtn) updatePipGo();
+}
+
+function updatePipGo() {
+  if (!pipDoc) return;
+  const btn = pipDoc.getElementById('pip-go');
+  if (!btn) return;
+  btn.textContent = state.running ? 'Pause' : (state.remaining < state.durations[state.mode] * 60 - 0.5 ? 'Resume' : 'Start');
+}
+
+/* ── window buttons ── */
+if (!window.ripe) document.body.classList.add('web');
+if (window.ripe) {
+  $('pin').addEventListener('click', () => {
+    // Serialise state HERE (module scope) — BRIDGE_JS cannot see module-scoped vars
+    window.ripe._post({
+      cmd:   'miniMode',
+      state: {
+        remaining: Math.round(state.remaining),
+        ripeness:  state.ripeness,
+        running:   state.running,
+        total:     state.durations[state.mode] * 60,
+      }
+    });
+  });
+  $('min').addEventListener('click', () => window.ripe.minimize());
+  $('close').addEventListener('click', () => window.ripe.close());
+}
+
+/* Called by Python when user expands from widget back to main app */
+window.restoreWidgetState = (remaining, ripeness, wasRunning) => {
+  // Stop any in-progress timer first
+  state.running = false;
+  state.remaining = remaining;
+  setRipeness(ripeness);
+  tomato.setMinutes(remaining / 60, { instant: true });
+  paint();
+  if (wasRunning) {
+    // Brief pause so the user can see the restored state before it resumes
+    setTimeout(start, 300);
+  }
+};
+
+$('go').addEventListener('click', toggle);
+$('reset').addEventListener('click', () => { reset(); bump(0.95); click(0.6); });
+
+const soundBtn = $('sound');
+const paintSound = () => {
+  soundBtn.setAttribute('aria-pressed', String(state.sound));
+  soundBtn.querySelector('.wave').style.opacity = state.sound ? 1 : 0;
+};
+soundBtn.addEventListener('click', () => { state.sound = !state.sound; store.set('sound', state.sound); paintSound(); click(); });
+paintSound();
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = e.target.tagName;
+  if (tag === 'INPUT') return;
+  if (e.key === ' ' && tag !== 'BUTTON') { e.preventDefault(); toggle(); }
+  else if (e.key === 'r' || e.key === 'R') reset();
+  else if (e.key === 'm' || e.key === 'M') soundBtn.click();
+  else if (e.key === '1') setMode('focus');
+  else if (e.key === '2') setMode('short');
+  else if (e.key === '3') setMode('long');
+});
+
+/* ── hint ── */
+if (store.get('hintSeen', false)) $('hint').classList.add('gone');
+stage.addEventListener('click', () => { $('hint').classList.add('gone'); store.set('hintSeen', true); }, { once: true });
+
+
+/* ════════════════════════════════════════
+   ── SCREEN NAVIGATION ──
+   ════════════════════════════════════════ */
+let activeScreen = 'timer';
+function showScreen(name) {
+  if (name === activeScreen) return;
+  activeScreen = name;
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === name));
+  document.querySelectorAll('.nbtn').forEach(b => {
+    const isActive = b.dataset.nav === name;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-current', isActive ? 'page' : 'false');
+  });
+  if (name === 'stats')    renderStats();
+  if (name === 'tasks')    renderTasks();
+  if (name === 'settings') syncSettings();
+}
+document.querySelectorAll('.nbtn').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.nav)));
+
+/* ════════════════════════════════════════
+   ── TASKS ──
+   ════════════════════════════════════════ */
+let tasks = store.get('tasks', []);
+function saveTasks() { store.set('tasks', tasks); }
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderTasks() {
+  const list = $('task-list');
+  const empty = $('task-empty');
+  const actions = $('task-actions');
+  const hasDone = tasks.some(t => t.done);
+  actions.hidden = !hasDone;
+  if (!tasks.length) { list.innerHTML = ''; empty.hidden = false; return; }
+  empty.hidden = true;
+  list.innerHTML = tasks.map((t, i) => `
+    <li class="task-item${t.done ? ' done' : ''}" data-idx="${i}">
+      <button class="task-check" aria-label="${t.done ? 'Mark undone' : 'Mark done'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          ${t.done
+            ? '<polyline points="20 6 9 17 4 12"/>'
+            : '<circle cx="12" cy="12" r="9"/>'}
+        </svg>
+      </button>
+      <span class="task-text">${escHtml(t.text)}</span>
+      <button class="task-del" aria-label="Delete task">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m18 6-12 12M6 6l12 12"/>
+        </svg>
+      </button>
+    </li>`).join('');
+}
+
+$('task-list').addEventListener('click', (e) => {
+  const item = e.target.closest('.task-item');
+  if (!item) return;
+  const i = parseInt(item.dataset.idx);
+  if (e.target.closest('.task-check')) {
+    tasks[i].done = !tasks[i].done;
+    saveTasks(); renderTasks();
+  } else if (e.target.closest('.task-del')) {
+    tasks.splice(i, 1);
+    saveTasks(); renderTasks();
+  }
+});
+
+$('clear-done').addEventListener('click', () => {
+  tasks = tasks.filter(t => !t.done);
+  saveTasks(); renderTasks();
+});
+
+const taskInput = $('task-input');
+function addTask() {
+  const text = taskInput.value.trim();
+  if (!text) return;
+  tasks.push({ text, done: false });
+  taskInput.value = '';
+  saveTasks(); renderTasks();
+}
+taskInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+$('task-add-btn').addEventListener('click', addTask);
+
+/* ════════════════════════════════════════
+   ── STATS ──
+   ════════════════════════════════════════ */
+function dayKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function calcStreak(sessions) {
+  const focusDays = new Set(sessions.filter(s => s.mode === 'focus').map(s => dayKey(s.ts)));
+  const msPerDay = 86400000;
+  const todayKey = dayKey(Date.now());
+  let streak = 0;
+  for (let d = 0; d < 365; d++) {
+    const k = dayKey(Date.now() - d * msPerDay);
+    if (focusDays.has(k)) { streak++; }
+    else if (d > 0) break;
+  }
+  return streak;
+}
+
+function renderStats() {
+  const sessions = store.get('sessions', []);
+  const todayKey = dayKey(Date.now());
+  const todaySessions = sessions.filter(s => s.mode === 'focus' && dayKey(s.ts) === todayKey);
+
+  $('stat-sessions').textContent = todaySessions.length;
+  $('stat-minutes').textContent = todaySessions.reduce((a, s) => a + s.minutes, 0) + 'm';
+  $('stat-streak').textContent = calcStreak(sessions);
+
+  const logList = $('log-list');
+  const logEmpty = $('log-empty');
+  const recent = [...sessions].reverse().slice(0, 30);
+
+  if (!recent.length) { logList.innerHTML = ''; logEmpty.hidden = false; return; }
+  logEmpty.hidden = true;
+  const today = new Date().toDateString();
+  logList.innerHTML = recent.map(s => {
+    const d = new Date(s.ts);
+    const time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const dateStr = d.toDateString() === today ? 'Today' : d.toLocaleDateString([], {month:'short', day:'numeric'});
+    const labels = { focus: '🍅 Focus', short: '☕ Short break', long: '🌿 Long break' };
+    return `<li class="log-item">
+      <span class="log-mode">${labels[s.mode] || s.mode}</span>
+      <span class="log-meta">${s.minutes}m · ${dateStr} ${time}</span>
+    </li>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   ── SETTINGS ──
+   ════════════════════════════════════════ */
+function syncSettings() {
+  $('dur-focus').textContent   = state.durations.focus;
+  $('dur-short').textContent   = state.durations.short;
+  $('dur-long').textContent    = state.durations.long;
+  $('dur-rounds').textContent  = ROUNDS;
+  const cur = document.documentElement.dataset.theme || '';
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === cur));
+}
+
+document.querySelectorAll('.stepper').forEach(stepper => {
+  const mode = stepper.dataset.dur;
+  stepper.querySelectorAll('.step-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const delta = parseInt(btn.dataset.step);
+      if (mode === 'rounds') {
+        ROUNDS = Math.min(8, Math.max(1, ROUNDS + delta));
+        store.set('rounds', ROUNDS);
+        $('dur-rounds').textContent = ROUNDS;
+        syncRoundDots(); setStatus();
+        return;
+      }
+      const limits = { focus: [1, 90], short: [1, 30], long: [1, 60] };
+      const [min, max] = limits[mode];
+      const nv = Math.min(max, Math.max(min, state.durations[mode] + delta));
+      if (nv === state.durations[mode]) return;
+      state.durations[mode] = nv;
+      store.set('durations', state.durations);
+      $(`dur-${mode}`).textContent = nv;
+      if (state.mode === mode && !state.running) {
+        state.remaining = nv * 60;
+        tomato.setMinutes(nv, { instant: true });
+        paint();
+      }
+    });
+  });
+});
+
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const theme = btn.dataset.theme;
+    document.documentElement.dataset.theme = theme || undefined;
+    if (!theme) delete document.documentElement.dataset.theme;
+    store.set('theme', theme);
+    syncSettings();
+  });
+});
+
+/* ── apply saved theme ── */
+const savedTheme = store.get('theme', '');
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+/* ── init ── */
+syncRoundDots();
+setMode('focus', { keepRound: true });
+requestAnimationFrame(() => requestAnimationFrame(() => tabs.classList.add('ready')));
+renderTasks();
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:170px;height:215px;
+  background:transparent;
+  overflow:hidden;
+  font-family:'Helvetica Neue',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Transparent floating layout */
+.card{
+  width:170px;height:215px;
+  background:transparent;
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;
+}
+
+/* Tomato stage — fills most of the card */
+#stage{
+  width:162px;height:160px;
+  position:relative;
+  flex-shrink:0;
+  margin-top:2px;
+  cursor:move;
+}
+#stage canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+}
+
+/* Time display — white with shadow so it's readable on any desktop */
+#time{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;
+  letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;
+  color:#fff;
+  text-shadow:0 2px 10px rgba(0,0,0,0.9),0 0 2px rgba(0,0,0,0.6);
+  user-select:none;
+  padding-bottom:6px;
+}
+
+/* Hover controls overlay — dark pill at bottom */
+#controls{
+  position:absolute;
+  bottom:10px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:0;
+  background:rgba(18,18,18,0.90);
+  border-radius:999px;
+  padding:4px 6px;
+  opacity:0;
+  transition:opacity 0.14s ease;
+  pointer-events:none;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.card:hover #controls{
+  opacity:1;
+  pointer-events:auto;
+}
+.cbtn{
+  width:30px;height:30px;
+  background:transparent;
+  border:none;border-radius:50%;
+  color:white;
+  display:grid;place-items:center;
+  cursor:pointer;
+  transition:background 0.1s;
+}
+.cbtn:hover{background:rgba(255,255,255,0.14)}
+.cbtn:active{transform:scale(0.9)}
+.sep{width:1px;height:14px;background:rgba(255,255,255,0.22);margin:0 2px;flex-shrink:0}
+
+/* Pulsing animation — last 60s */
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.045)}
+}
+.pulsing #stage{animation:pulse 1.4s ease-in-out infinite}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div class="card" id="card">
+  <div id="stage"></div>
+  <div id="time">25:00</div>
+  <div id="controls">
+    <button class="cbtn" id="pause-btn" title="Pause / Resume">
+      <!-- filled in by updatePauseIcon() -->
+    </button>
+    <div class="sep"></div>
+    <button class="cbtn" id="expand-btn" title="Open Ripe">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 1h4v4M5 11H1V7M11 1l-5 5M1 11l5-5"/>
+      </svg>
+    </button>
+    <div class="sep"></div>
+    <button class="cbtn" id="close-btn" title="Close">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round">
+        <path d="m2.5 2.5 7 7M9.5 2.5l-7 7"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script type="module">
+import { createTomato } from './ripe-tomato.js';
+
+const $ = id => document.getElementById(id);
+const timeEl   = $('time');
+const card     = $('card');
+const pauseBtn = $('pause-btn');
+
+let remaining    = 25 * 60;   // seconds
+let totalSeconds = 25 * 60;
+let ripeness     = 0;
+let running      = false;
+let interval     = null;
+
+// Create tomato — initial state: 25 min, green (ripeness 0)
+const tomato = createTomato($('stage'), {
+  minutes:  25,
+  ripeness: 0,
+  onChange: null,
+  onTick:   null,
+});
+
+function fmt(s) {
+  s = Math.max(0, Math.round(s));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function paint() {
+  timeEl.textContent = fmt(remaining);
+  // Update dial position to match remaining time (like a real kitchen timer)
+  tomato.setMinutes(remaining / 60);
+  // Update tomato colour (green → red as ripeness 0 → 1)
+  tomato.setRipeness(ripeness);
+  // Pulse in the last 60 seconds
+  card.classList.toggle('pulsing', running && remaining > 0 && remaining <= 60);
+}
+
+function tick() {
+  if (!running) return;
+  remaining = Math.max(0, remaining - 1);
+  ripeness  = totalSeconds > 0 ? 1 - remaining / totalSeconds : 0;
+  paint();
+  if (remaining <= 0) {
+    running = false;
+    clearInterval(interval);
+    interval = null;
+    updatePauseIcon();
+  }
+}
+
+function startTimer() {
+  if (interval) clearInterval(interval);
+  interval = setInterval(tick, 1000);
+}
+
+function updatePauseIcon() {
+  pauseBtn.innerHTML = running
+    ? `<svg width="13" height="13" viewBox="0 0 12 12" fill="white">
+         <rect x="2" y="1.5" width="3" height="9"/>
+         <rect x="7" y="1.5" width="3" height="9"/>
+       </svg>`
+    : `<svg width="13" height="13" viewBox="0 0 12 12" fill="white">
+         <path d="M2.5 1.5 10 6l-7.5 4.5z"/>
+       </svg>`;
+}
+updatePauseIcon();
+
+// ── Controls ─────────────────────────────────────────────────────────────────
+
+pauseBtn.addEventListener('click', () => {
+  running = !running;
+  if (running) startTimer();
+  else { clearInterval(interval); interval = null; }
+  updatePauseIcon();
+  window.ripe?._post({ cmd: 'widgetPause', running });
+});
+
+function doExpand() {
+  if (interval) { clearInterval(interval); interval = null; }
+  window.ripe?._post({ cmd: 'expand', state: { remaining, ripeness, running } });
+}
+$('expand-btn').addEventListener('click', doExpand);
+$('stage').addEventListener('dblclick', doExpand);
+
+$('close-btn').addEventListener('click', () => {
+  window.ripe?._post({ cmd: 'close' });
+});
+
+// ── Drag the whole card (not buttons) ────────────────────────────────────────
+document.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  if (e.target.closest('button')) return;
+  window.ripe?._post({ cmd: 'drag', x: e.screenX, y: e.screenY, t: Math.round(e.timeStamp) });
+});
+
+// ── API called from Python after showing the widget ───────────────────────────
+window.initWidget = (rem, rip, run, total) => {
+  if (interval) { clearInterval(interval); interval = null; }
+  remaining    = rem;
+  ripeness     = rip;
+  running      = !!run;
+  totalSeconds = total > 0 ? total : rem;
+  updatePauseIcon();
+  paint();
+  if (running) startTimer();
+};
+
+window.getWidgetState = () => ({ remaining, ripeness, running });
+
+paint();
+</script>
+</body>
+</html>
