@@ -26,7 +26,7 @@ Ripe is an open-source **pomodoro timer for Linux** built with Python and GTK3. 
 
 | Timer | Tasks | Stats | Settings |
 |:---:|:---:|:---:|:---:|
-| <img src=".github/screenshots/timer.png" width="200" alt="Timer screen"> | <img src=".github/screenshots/tasks.png" width="200" alt="Tasks screen"> | <img src=".github/screenshots/stats.png" width="200" alt="Stats screen"> | <img src=".github/screenshots/settings.png" width="200" alt="Settings screen"> |
+| <img src=".github/screenshots/home.png" width="200" alt="Timer screen"> | <img src=".github/screenshots/tasks.png" width="200" alt="Tasks screen"> | <img src=".github/screenshots/stats.png" width="200" alt="Stats screen"> | <img src=".github/screenshots/settings.png" width="200" alt="Settings screen"> |
 
 <br>
 
