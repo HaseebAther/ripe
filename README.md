@@ -1,11 +1,8 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/HaseebAther/ripe/main/.github/icon.svg" width="96" alt="Ripe Pomodoro Timer for Linux">
+<img src=".github/screenshots/banner.png" alt="Ripe — Pomodoro Timer for Linux" width="100%">
 
-# Ripe — Pomodoro Timer for Linux
-
-**A focus timer app for Linux where the tomato actually ripens.**  
-The dial rotates. The tomato turns red. When the session ends, it's fully ripe.
+<br><br>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
@@ -20,6 +17,24 @@ The dial rotates. The tomato turns red. When the session ends, it's fully ripe.
 ---
 
 Ripe is an open-source **pomodoro timer for Linux** built with Python and GTK3. It uses the [Pomodoro Technique](https://en.wikipedia.org/wiki/Pomodoro_Technique) — 25-minute focus sessions separated by short breaks — to help you work without burning out. What makes it different from every other focus timer on Linux: a **3D tomato that visually ripens** as your session runs, with a rotating kitchen-timer dial that counts down in real time. It stays out of your way while you work, and snaps into a **tiny floating widget** you can park anywhere on screen.
+
+---
+
+## Screenshots
+
+<div align="center">
+
+| Timer | Tasks | Stats | Settings |
+|:---:|:---:|:---:|:---:|
+| <img src=".github/screenshots/timer.png" width="200" alt="Timer screen"> | <img src=".github/screenshots/tasks.png" width="200" alt="Tasks screen"> | <img src=".github/screenshots/stats.png" width="200" alt="Stats screen"> | <img src=".github/screenshots/settings.png" width="200" alt="Settings screen"> |
+
+<br>
+
+<img src=".github/screenshots/widget.png" width="720" alt="Ripe floating widget over a code editor — always on top, drag anywhere">
+
+*The floating widget parks over any app while you work — drag it anywhere, hover to reveal controls.*
+
+</div>
 
 ---
 
