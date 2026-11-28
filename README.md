@@ -85,6 +85,16 @@ Most Linux pomodoro apps are timer utilities that happen to show a tomato icon. 
 
 ## Installation
 
+### Download the .deb (Ubuntu 22.04+ / Debian 12+)
+
+Download the `.deb` file from the [latest release](https://github.com/HaseebAther/ripe/releases/latest), then run this in the download folder:
+
+```bash
+sudo apt install ./ripe_*_all.deb
+```
+
+Search **Ripe** in your app launcher or run `ripe`. To remove it: `sudo apt remove ripe`.
+
 ### Requirements
 
 | Package | Purpose |
@@ -176,6 +186,7 @@ ripe/
 ├── mini.html        # Mini widget — transparent floating tomato
 ├── ripe-tomato.js   # Three.js 3D tomato renderer (ES module)
 ├── install.sh       # One-command installer for all major distros
+├── build-deb.sh     # Builds the .deb package: ./build-deb.sh 1.0.0
 └── LICENSE
 ```
 
