@@ -106,7 +106,7 @@ git clone https://github.com/HaseebAther/ripe.git
 cd ripe
 
 # 3. Run
-python3 app.py
+./app.py
 ```
 
 ### Quick install (Fedora)
@@ -128,8 +128,10 @@ git clone https://github.com/HaseebAther/ripe.git && cd ripe && python3 app.py
 ```bash
 git clone https://github.com/HaseebAther/ripe.git
 cd ripe
-bash install.sh
+./install.sh
 ```
+
+`app.py` and `install.sh` are executable. If your download lost that permission (`Permission denied`), restore it with `chmod +x app.py install.sh`.
 
 The installer copies files to `~/.local/share/ripe/`, registers a `.desktop` entry, and installs the icon. After running it, search **Ripe** in GNOME Activities or your app launcher.
 
